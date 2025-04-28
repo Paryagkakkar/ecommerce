@@ -1,13 +1,12 @@
-import 'dotenv/config'; // Import dotenv correctly
+import 'dotenv/config';
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import { Server } from 'socket.io';
 import http from 'http';
-import tshirtRoutes from './routers/TShirtRoutes.js';
+import blazerRoutes from './routers/blazersRoutes.js';
 import shirtRoutes from './routers/shirtRoutes.js';
 import hoodieRoutes from './routers/hoodiesRoutes.js';
-import blazerRoutes from './routers/blazersRoutes.js';
 import sweaterRoutes from './routers/sweatersRoutes.js';
 import jacketRoutes from './routers/jacketRoutes.js';
 import orderRoutes from './routers/order.js';
@@ -26,6 +25,9 @@ const io = new Server(server, {
   },
 });
 
+// Set socketio on app for routes to access
+app.set('socketio', io);
+
 // Middleware
 app.use(cors({
   origin: ['http://localhost:3000', 'http://localhost:3001'],
@@ -34,16 +36,17 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/images', express.static('public/images'));
-app.use('/uploads', express.static('public/uploads'));
+app.use('/Uploads', express.static('public/Uploads'));
 
-// Set Socket.IO instance
-app.set('socketio', io);
+app.use((req, res, next) => {
+  console.log(`📡 Request: ${req.method} ${req.originalUrl}`);
+  next();
+});
 
 // Routes
-app.use('/api/tshirts', tshirtRoutes);
+app.use('/api/blazers', blazerRoutes);
 app.use('/api/shirts', shirtRoutes);
 app.use('/api/hoodies', hoodieRoutes);
-app.use('/api/blazers', blazerRoutes);
 app.use('/api/sweaters', sweaterRoutes);
 app.use('/api/jackets', jacketRoutes);
 app.use('/api/orders', orderRoutes);
@@ -82,7 +85,7 @@ app.get('/health', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Server error:', err.message, err.stack);
+  console.error('❌ Server error:', err.message, err.stack);
   res.status(500).json({
     success: false,
     message: 'Something went wrong!',
@@ -117,5 +120,5 @@ const startServer = async () => {
 startServer();
 
 process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Promise Rejection:', err);
+  console.error('❌ Unhandled Promise Rejection:', err);
 });

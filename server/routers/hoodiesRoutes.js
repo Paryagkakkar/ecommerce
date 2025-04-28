@@ -1,10 +1,10 @@
 import express from "express";
 import {
-    gethoodies,
-    gethoodiesById,
-    createhoodies,
-    updatehoodies,
-    deletehoodies,
+  gethoodies,
+  gethoodiesById,
+  createhoodies,
+  updatehoodies,
+  deletehoodies,
 } from "../controllers/hoodiesController.js";
 import upload from "../middleware/uploadMiddleware.js";
 

@@ -7,10 +7,10 @@ const productSchema = mongoose.Schema(
     size: { type: String },
     color: { type: String },
     category: { type: String },
-    image: { type: String, required: false }, // Image file path stored as a string
+    image: { type: String, required: false },
   },
   { timestamps: true }
 );
 
-const sweatersProduct = mongoose.model("sweatersProduct", productSchema);
+const sweatersProduct = mongoose.model("Sweater", productSchema); // Collection name: "sweaters"
 export default sweatersProduct;

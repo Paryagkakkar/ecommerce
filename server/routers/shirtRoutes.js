@@ -1,14 +1,22 @@
-import express from 'express';
-import { getShirts, getShirtById, createShirt, updateShirt, deleteShirt } from '../controllers/shirtController.js';
-import upload from '../middleware/uploadMiddleware.js';
-import authMiddleware from '../middleware/authmiddleware.js';
+import express from "express";
+import {
+  getshirts,
+  getshirtsById,
+  createshirts,
+  updateshirts,
+  deleteshirts,
+} from "../controllers/shirtController.js";
+import upload from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
-router.get('/get-all-shirts', getShirts);
-router.get('/:id', getShirtById);
-router.post('/add-shirts', authMiddleware, upload.single('image'), createShirt);
-router.put('/:id', authMiddleware, upload.single('image'), updateShirt);
-router.delete('/:id', authMiddleware, deleteShirt);
+// Specific routes first
+router.get("/get-all-shirts", getshirts);
+router.post("/add-shirts", upload.single("image"), createshirts);
+
+// ID-based routes last
+router.get("/:id", getshirtsById);
+router.put("/:id", upload.single("image"), updateshirts);
+router.delete("/:id", deleteshirts);
 
 export default router;

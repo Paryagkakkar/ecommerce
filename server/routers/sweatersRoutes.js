@@ -1,19 +1,31 @@
 import express from "express";
+import multer from "multer";
 import {
-    getsweaters,
-    getsweatersById,
-    createsweaters,
-    updatesweaters,
-    deletesweaters,
+  getSweaters,
+  getSweaterById,
+  createSweater,
+  updateSweater,
+  deleteSweater,
 } from "../controllers/sweatersController.js";
-import upload from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
-router.get("/get-all-sweaters", getsweaters);
-router.get("/:id", getsweatersById);
-router.post("/add-sweaters", upload.single("image"), createsweaters);
-router.put("/:id", upload.single("image"), updatesweaters);
-router.delete("/:id", deletesweaters);
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "public/Uploads");
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+const upload = multer({ storage });
+
+// Define routes
+router.get("/", getSweaters);
+router.get("/:id", getSweaterById);
+router.post("/", upload.single("image"), createSweater);
+router.put("/:id", upload.single("image"), updateSweater);
+router.delete("/:id", deleteSweater);
 
 export default router;

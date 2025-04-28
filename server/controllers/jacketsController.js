@@ -6,6 +6,7 @@ export const getjackets = async (req, res) => {
     const products = await jacketsProduct.find();
     res.json(products);
   } catch (error) {
+    console.error("Error fetching jackets:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -14,9 +15,10 @@ export const getjackets = async (req, res) => {
 export const getjacketsById = async (req, res) => {
   try {
     const product = await jacketsProduct.findById(req.params.id);
-    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (!product) return res.status(404).json({ message: "Jacket not found" });
     res.json(product);
   } catch (error) {
+    console.error("Error fetching jacket by ID:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -25,20 +27,26 @@ export const getjacketsById = async (req, res) => {
 export const createjackets = async (req, res) => {
   try {
     const { title, price, size, color, category } = req.body;
-    const image = req.file ? `/uploads/${req.file.filename}` : "";
+    if (!title || !price || !size || !color || !category || !req.file) {
+      return res.status(400).json({ error: "All fields are required, including image" });
+    }
+    if (parseFloat(price) <= 0) {
+      return res.status(400).json({ error: "Price must be greater than 0" });
+    }
 
     const newProduct = new jacketsProduct({
       title,
-      price,
+      price: parseFloat(price),
       size,
       color,
       category,
-      image,
+      image: `/uploads/${req.file.filename}`,
+      type: "jacket", // Explicitly set type
     });
     await newProduct.save();
     res.status(201).json(newProduct);
   } catch (error) {
-    console.error("Error creating product:", error); // Add this line to log the error
+    console.error("Error creating jacket:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -46,42 +54,49 @@ export const createjackets = async (req, res) => {
 // 📌 4️⃣ Update product (with file upload)
 export const updatejackets = async (req, res) => {
   try {
-    // Log the request and file information
     console.log("Received update request:", req.params.id);
     console.log("Request body:", req.body);
     console.log("Uploaded file:", req.file);
 
-    // Destructure the fields from the request body
     const { title, price, size, color, category } = req.body;
+    const jacket = await jacketsProduct.findById(req.params.id);
 
-    // Find the T-shirt by its ID in the database
-    const jackets = await jacketsProduct.findById(req.params.id);
-
-    // If the T-shirt isn't found, return a 404 error
-    if (!jackets) {
-      return res.status(404).json({ message: "T-Shirt not found" });
+    if (!jacket) {
+      return res.status(404).json({ message: "Jacket not found" });
     }
 
-    // Update the T-shirt fields (only if new values are provided)
-    jackets.title = title || jackets.title;
-    jackets.price = price || jackets.price;
-    jackets.size = size || jackets.size;
-    jackets.color = color || jackets.color;
-    jackets.category = category || jackets.category;
+    // Validate required fields if provided
+    if (title !== undefined && !title) {
+      return res.status(400).json({ error: "Title is required" });
+    }
+    if (price !== undefined && (!price || parseFloat(price) <= 0)) {
+      return res.status(400).json({ error: "Price must be greater than 0" });
+    }
+    if (size !== undefined && !size) {
+      return res.status(400).json({ error: "Size is required" });
+    }
+    if (color !== undefined && !color) {
+      return res.status(400).json({ error: "Color is required" });
+    }
+    if (category !== undefined && !category) {
+      return res.status(400).json({ error: "Category is required" });
+    }
 
-    // If a new image is uploaded, update the image field
+    jacket.title = title || jacket.title;
+    jacket.price = price ? parseFloat(price) : jacket.price;
+    jacket.size = size || jacket.size;
+    jacket.color = color || jacket.color;
+    jacket.category = category || jacket.category;
+    jacket.type = "jacket"; // Ensure type is set
+
     if (req.file) {
-      jackets.image = `/uploads/${req.file.filename}`;
+      jacket.image = `/Uploads/${req.file.filename}`;
     }
 
-    // Save the updated T-shirt to the database
-    const updatedjackets = await jackets.save();
-
-    // Respond with the updated T-shirt
-    res.json({ success: true, product: updatedjackets });
+    const updatedJacket = await jacket.save();
+    res.json(updatedJacket); // Standardize response
   } catch (error) {
-    // Handle errors by sending a 500 error response
-    console.error("❌ Error updating T-Shirt:", error);
+    console.error("Error updating jacket:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -90,11 +105,12 @@ export const updatejackets = async (req, res) => {
 export const deletejackets = async (req, res) => {
   try {
     const product = await jacketsProduct.findById(req.params.id);
-    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (!product) return res.status(404).json({ message: "Jacket not found" });
 
     await product.deleteOne();
-    res.json({ message: "Product deleted successfully" });
+    res.json({ message: "Jacket deleted successfully" });
   } catch (error) {
+    console.error("Error deleting jacket:", error);
     res.status(500).json({ error: error.message });
   }
 };

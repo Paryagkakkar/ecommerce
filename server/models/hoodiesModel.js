@@ -8,6 +8,7 @@ const productSchema = mongoose.Schema(
     color: { type: String },
     category: { type: String },
     image: { type: String }, // Image file path stored as a string
+    type: { type: String, default: "hoodie" }, // Added type field
   },
   { timestamps: true }
 );

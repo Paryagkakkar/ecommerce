@@ -1,10 +1,10 @@
 import express from "express";
 import {
-    getjackets,
-    getjacketsById,
-    createjackets,
-    updatejackets,
-    deletejackets,
+  getjackets,
+  getjacketsById,
+  createjackets,
+  updatejackets,
+  deletejackets,
 } from "../controllers/jacketsController.js";
 import upload from "../middleware/uploadMiddleware.js";
 

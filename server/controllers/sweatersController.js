@@ -1,100 +1,122 @@
+import mongoose from "mongoose";
 import sweatersProduct from "../models/sweatersModel.js";
 
-// 📌 1️⃣ Get all products
-export const getsweaters = async (req, res) => {
+// Get all sweaters
+export const getSweaters = async (req, res) => {
   try {
-    const products = await sweatersProduct.find();
+    console.log("Querying sweaters");
+    const products = await sweatersProduct.find().lean();
+    console.log("Fetched sweaters:", products.length, "items");
     res.json(products);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error fetching sweaters:", error.message, error.stack);
+    res.status(500).json({ error: "Failed to fetch sweaters" });
   }
 };
 
-// 📌 2️⃣ Get single product
-export const getsweatersById = async (req, res) => {
+// Get single sweater by ID
+export const getSweaterById = async (req, res) => {
   try {
-    const product = await sweatersProduct.findById(req.params.id);
-    if (!product) return res.status(404).json({ message: "Product not found" });
+    console.log("Fetching sweater by ID:", req.params.id);
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      console.warn("Invalid sweater ID:", req.params.id);
+      return res.status(400).json({ error: "Invalid sweater ID" });
+    }
+    const product = await sweatersProduct.findById(req.params.id).lean();
+    if (!product) {
+      console.log("Sweater not found:", req.params.id);
+      return res.status(404).json({ error: "Sweater not found" });
+    }
     res.json(product);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error fetching sweater by ID:", error.message, error.stack);
+    res.status(500).json({ error: "Failed to fetch sweater" });
   }
 };
 
-// 📌 3️⃣ Create product (with file upload)
-export const createsweaters = async (req, res) => {
+// Create sweater
+export const createSweater = async (req, res) => {
   try {
     const { title, price, size, color, category } = req.body;
-    const image = req.file ? `/uploads/${req.file.filename}` : "";
+    const image = req.file ? `/Uploads/${req.file.filename}` : "";
+    console.log("Creating sweater:", { title, price, size, color, category, image });
+
+    if (!title || !price) {
+      console.warn("Missing required fields:", { title, price });
+      return res.status(400).json({ error: "Title and price are required" });
+    }
 
     const newProduct = new sweatersProduct({
       title,
-      price,
+      price: parseFloat(price),
       size,
       color,
       category,
       image,
     });
-    await newProduct.save();
-    res.status(201).json(newProduct);
+    const savedProduct = await newProduct.save();
+    console.log("Created sweater:", savedProduct);
+    res.status(201).json(savedProduct);
   } catch (error) {
-    console.error("Error creating product:", error); // Add this line to log the error
-    res.status(500).json({ error: error.message });
+    console.error("Error creating sweater:", error.message, error.stack);
+    res.status(500).json({ error: "Failed to create sweater" });
   }
 };
 
-// 📌 4️⃣ Update product (with file upload)
-export const updatesweaters = async (req, res) => {
+// Update sweater
+export const updateSweater = async (req, res) => {
   try {
-    // Log the request and file information
-    console.log("Received update request:", req.params.id);
-    console.log("Request body:", req.body);
-    console.log("Uploaded file:", req.file);
+    console.log("Updating sweater:", req.params.id);
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      console.warn("Invalid sweater ID:", req.params.id);
+      return res.status(400).json({ error: "Invalid sweater ID" });
+    }
 
-    // Destructure the fields from the request body
+    const sweater = await sweatersProduct.findById(req.params.id);
+    if (!sweater) {
+      console.log("Sweater not found:", req.params.id);
+      return res.status(404).json({ error: "Sweater not found" });
+    }
+
     const { title, price, size, color, category } = req.body;
-
-    // Find the T-shirt by its ID in the database
-    const sweaters = await sweatersProduct.findById(req.params.id);
-
-    // If the T-shirt isn't found, return a 404 error
-    if (!sweaters) {
-      return res.status(404).json({ message: "T-Shirt not found" });
-    }
-
-    // Update the T-shirt fields (only if new values are provided)
-    sweaters.title = title || sweaters.title;
-    sweaters.price = price || sweaters.price;
-    sweaters.size = size || sweaters.size;
-    sweaters.color = color || sweaters.color;
-    sweaters.category = category || sweaters.category;
-
-    // If a new image is uploaded, update the image field
+    sweater.title = title || sweater.title;
+    sweater.price = price ? parseFloat(price) : sweater.price;
+    sweater.size = size || sweater.size;
+    sweater.color = color || sweater.color;
+    sweater.category = category || sweater.category;
     if (req.file) {
-      sweaters.image = `/uploads/${req.file.filename}`;
+      sweater.image = `/Uploads/${req.file.filename}`;
     }
 
-    // Save the updated T-shirt to the database
-    const updatedsweaters = await sweaters.save();
-
-    // Respond with the updated T-shirt
-    res.json({ success: true, product: updatedsweaters });
+    const updatedSweater = await sweater.save();
+    console.log("Updated sweater:", updatedSweater);
+    res.json({ success: true, product: updatedSweater });
   } catch (error) {
-    // Handle errors by sending a 500 error response
-    console.error("❌ Error updating T-Shirt:", error);
-    res.status(500).json({ error: error.message });
+    console.error("Error updating sweater:", error.message, error.stack);
+    res.status(500).json({ error: "Failed to update sweater" });
   }
 };
 
-// 📌 5️⃣ Delete product
-export const deletesweaters = async (req, res) => {
+// Delete sweater
+export const deleteSweater = async (req, res) => {
   try {
+    console.log("Deleting sweater:", req.params.id);
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      console.warn("Invalid sweater ID:", req.params.id);
+      return res.status(400).json({ error: "Invalid sweater ID" });
+    }
+
     const product = await sweatersProduct.findById(req.params.id);
-    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (!product) {
+      console.log("Sweater not found:", req.params.id);
+      return res.status(404).json({ error: "Sweater not found" });
+    }
 
     await product.deleteOne();
-    res.json({ message: "Product deleted successfully" });
+    console.log("Sweater deleted:", req.params.id);
+    res.json({ message: "Sweater deleted successfully" });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error deleting sweater:", error.message, error.stack);
+    res.status(500).json({ error: "Failed to delete sweater" });
   }
 };

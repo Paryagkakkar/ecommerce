@@ -4,8 +4,10 @@ import hoodiesProduct from "../models/hoodiesModel.js";
 export const gethoodies = async (req, res) => {
   try {
     const products = await hoodiesProduct.find();
+    console.log("Backend - Fetched hoodies:", products); // Debug log
     res.json(products);
   } catch (error) {
+    console.error("Backend - Error fetching hoodies:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -15,8 +17,10 @@ export const gethoodiesById = async (req, res) => {
   try {
     const product = await hoodiesProduct.findById(req.params.id);
     if (!product) return res.status(404).json({ message: "Product not found" });
+    console.log("Backend - Fetched hoodie by ID:", product); // Debug log
     res.json(product);
   } catch (error) {
+    console.error("Backend - Error fetching hoodie by ID:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -24,8 +28,10 @@ export const gethoodiesById = async (req, res) => {
 // 📌 3️⃣ Create product (with file upload)
 export const createhoodies = async (req, res) => {
   try {
-    const { title, price, size, color, category } = req.body;
+    const { title, price, size, color, category, type } = req.body;
     const image = req.file ? `/uploads/${req.file.filename}` : "";
+    
+    console.log("Backend - Creating hoodie with data:", { title, price, size, color, category, type, image }); // Debug log
 
     const newProduct = new hoodiesProduct({
       title,
@@ -33,12 +39,14 @@ export const createhoodies = async (req, res) => {
       size,
       color,
       category,
+      type: type || "hoodie", // Use provided type or default to "hoodie"
       image,
     });
     await newProduct.save();
+    console.log("Backend - Created hoodie:", newProduct); // Debug log
     res.status(201).json(newProduct);
   } catch (error) {
-    console.error("Error creating product:", error); // Add this line to log the error
+    console.error("Backend - Error creating hoodie:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -46,42 +54,31 @@ export const createhoodies = async (req, res) => {
 // 📌 4️⃣ Update product (with file upload)
 export const updatehoodies = async (req, res) => {
   try {
-    // Log the request and file information
-    console.log("Received update request:", req.params.id);
-    console.log("Request body:", req.body);
-    console.log("Uploaded file:", req.file);
+    console.log("Backend - Update request:", req.params.id, req.body, req.file); // Debug log
 
-    // Destructure the fields from the request body
-    const { title, price, size, color, category } = req.body;
+    const { title, price, size, color, category, type } = req.body;
+    const hoodie = await hoodiesProduct.findById(req.params.id);
 
-    // Find the T-shirt by its ID in the database
-    const hoodies = await hoodiesProduct.findById(req.params.id);
-
-    // If the T-shirt isn't found, return a 404 error
-    if (!hoodies) {
-      return res.status(404).json({ message: "T-Shirt not found" });
+    if (!hoodie) {
+      return res.status(404).json({ message: "Hoodie not found" });
     }
 
-    // Update the T-shirt fields (only if new values are provided)
-    hoodies.title = title || hoodies.title;
-    hoodies.price = price || hoodies.price;
-    hoodies.size = size || hoodies.size;
-    hoodies.color = color || hoodies.color;
-    hoodies.category = category || hoodies.category;
-
-    // If a new image is uploaded, update the image field
+    // Update fields if provided
+    hoodie.title = title || hoodie.title;
+    hoodie.price = price || hoodie.price;
+    hoodie.size = size || hoodie.size;
+    hoodie.color = color || hoodie.color;
+    hoodie.category = category || hoodie.category;
+    hoodie.type = type || hoodie.type || "hoodie"; // Update type if provided, else keep existing or default
     if (req.file) {
-      hoodies.image = `/uploads/${req.file.filename}`;
+      hoodie.image = `/uploads/${req.file.filename}`;
     }
 
-    // Save the updated T-shirt to the database
-    const updatedhoodies = await hoodies.save();
-
-    // Respond with the updated T-shirt
-    res.json({ success: true, product: updatedhoodies });
+    const updatedHoodie = await hoodie.save();
+    console.log("Backend - Updated hoodie:", updatedHoodie); // Debug log
+    res.json({ success: true, product: updatedHoodie });
   } catch (error) {
-    // Handle errors by sending a 500 error response
-    console.error("❌ Error updating T-Shirt:", error);
+    console.error("Backend - Error updating hoodie:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -93,8 +90,10 @@ export const deletehoodies = async (req, res) => {
     if (!product) return res.status(404).json({ message: "Product not found" });
 
     await product.deleteOne();
+    console.log("Backend - Deleted hoodie:", req.params.id); // Debug log
     res.json({ message: "Product deleted successfully" });
   } catch (error) {
+    console.error("Backend - Error deleting hoodie:", error);
     res.status(500).json({ error: error.message });
   }
 };
