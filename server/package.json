@@ -30,6 +30,7 @@
     "serverless-http": "^3.2.0",
     "socket": "^0.14.57",
     "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "vercel": "^41.6.2"
   }
 }
